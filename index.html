@@ -253,7 +253,7 @@
         .selector-block {
             display: flex;
             flex-direction: column;
-            position: relative; /* For Custom Dropdown positioning */
+            position: relative; 
         }
 
         .fixed-input-field {
@@ -292,7 +292,7 @@
             height: 0;
             border-left: 4px solid transparent;
             border-right: 4px solid transparent;
-            border-top: 5px solid var(--accent); /* Tactical Cyan Arrow */
+            border-top: 5px solid var(--accent); 
             transition: transform 0.2s ease;
         }
 
@@ -302,4 +302,540 @@
 
         .custom-options-list {
             position: absolute;
-            top: 56px; /* Position right underneath label + trigger box
+            top: 56px; 
+            left: 0;
+            width: 100%;
+            background: #0f131a; 
+            border: 1px solid rgba(0, 255, 204, 0.3);
+            border-radius: 6px;
+            z-index: 999;
+            display: none; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            padding: 4px 0;
+            margin: 0;
+            list-style: none;
+            box-sizing: border-box;
+        }
+
+        .custom-option {
+            padding: 10px 12px;
+            font-size: 10px;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .custom-option:hover {
+            background: var(--accent-glow);
+            color: var(--accent);
+        }
+
+        .custom-option.selected {
+            background: rgba(0, 255, 204, 0.1);
+            color: var(--accent);
+            border-left: 2px solid var(--accent);
+        }
+
+        /* Color Picker Wrapper layout alignment */
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            cursor: pointer;
+        }
+
+        .color-picker-wrapper span {
+            font-size: 9px;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        input[type="color"] { 
+            -webkit-appearance: none;
+            border: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 4px;
+            background: none;
+            cursor: pointer;
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; }
+
+        .action-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 6px;
+        }
+
+        button.action-btn { 
+            padding: 10px; 
+            border: 1px solid var(--border-dim); 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px; 
+            border-radius: 4px; 
+            color: var(--text-main); 
+            background: #141a24; 
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button.action-btn:hover { background: #1e2635; }
+
+        .btn-wipe { 
+            background: rgba(244, 63, 94, 0.06) !important; 
+            color: #f43f5e !important;
+            border: 1px solid rgba(244, 63, 94, 0.25) !important;
+            grid-column: span 2; 
+        }
+        .btn-wipe:hover { background: rgba(244, 63, 94, 0.12) !important; }
+
+        /* Dynamic System Cursors */
+        .mode-move { cursor: grab; }
+        .mode-move:active { cursor: grabbing; }
+        .mode-zone { cursor: cell; }
+        .mode-resize { cursor: nwse-resize; }
+        .mode-draw { cursor: crosshair; }
+        .mode-erase { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2300ffcc" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>') 8 8, auto; }
+        .mode-lock { cursor: pointer; }
+    </style>
+</head>
+<body class="mode-move">
+
+    <div class="app-container">
+        <div class="bottom-sheet">
+            <div class="sheet-header">
+                <h1>ASTRA // <span>TACTICAL</span></h1>
+            </div>
+            
+            <div class="control-row">
+                <label>TACTICAL OPERATIONAL MODE</label>
+                <div class="tool-box">
+                    <button class="tool-btn active" id="btnMove" data-key="[M]" onclick="setMode('move')">MOVE</button>
+                    <button class="tool-btn" id="btnZone" data-key="[Z]" onclick="setMode('zone')">ZONE</button>
+                    <button class="tool-btn" id="btnResize" data-key="[R]" onclick="setMode('resize')">RESIZE</button>
+                    <button class="tool-btn" id="btnDraw" data-key="[D]" onclick="setMode('draw')">DRAW</button>
+                    <button class="tool-btn" id="btnErase" data-key="[E]" onclick="setMode('erase')">ERASE</button>
+                    <button class="tool-btn" id="btnLock" data-key="[L]" onclick="setMode('lock')">LOCK</button>
+                </div>
+
+                <div class="options-panel" id="drawOptions" style="display: none;">
+                    <div class="slider-meta">
+                        <span>BRUSH DIAMETER</span>
+                        <span id="brushSizeVal">4px</span>
+                    </div>
+                    <input type="range" id="brushSizeSlider" class="custom-slider" min="2" max="20" value="4" oninput="updateBrushSize(this.value)">
+                </div>
+
+                <div class="options-panel" id="eraserOptions" style="display: none;">
+                    <div class="tool-box" style="margin-bottom: 6px;">
+                        <button class="tool-btn active" id="btnFullErase" onclick="setEraserMode('full')">FULL MASK</button>
+                        <button class="tool-btn" id="btnPartErase" onclick="setEraserMode('part')">PART CUT</button>
+                    </div>
+                    <div class="slider-meta">
+                        <span>ERASER RADIUS</span>
+                        <span id="sizeVal">25px</span>
+                    </div>
+                    <input type="range" id="eraserSizeSlider" class="custom-slider" min="10" max="80" value="25" oninput="updateEraserSize(this.value)">
+                </div>
+            </div>
+
+            <div class="selector-row">
+                <div class="selector-block custom-dropdown-container" id="mapDropdown">
+                    <label>SECTOR MAP</label>
+                    <div class="fixed-input-field">
+                        <div class="custom-select-trigger" onclick="toggleDropdown()">
+                            <span id="selectedMapLabel">KIROK SECTOR</span>
+                        </div>
+                    </div>
+                    <ul class="custom-options-list" id="customOptions">
+                        <li class="custom-option selected" onclick="selectMapOption('kirok', 'KIROK SECTOR')">KIROK SECTOR</li>
+                        <li class="custom-option" onclick="selectMapOption('mumbai', 'MUMBAI SECTOR')">MUMBAI SECTOR</li>
+                    </ul>
+                </div>
+                <div class="selector-block">
+                    <label>COLOR PROFILE</label>
+                    <div class="fixed-input-field color-picker-wrapper" onclick="document.getElementById('brushColor').click()">
+                        <span>HEX CODE</span>
+                        <input type="color" id="brushColor" value="#00ffcc">
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-grid">
+                <button class="action-btn" onclick="undo()">UNDO</button>
+                <button class="action-btn" onclick="redo()">REDO</button>
+                <button class="action-btn btn-wipe" onclick="clearCanvas()">WIPE TACTICAL BOARD</button>
+            </div>
+        </div>
+
+        <div class="map-viewport" id="viewport">
+            <div id="mapWrapper">
+                <div id="mapBoard">
+                    <canvas id="paintCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // FIXED: Correct repository file naming set up here
+        const maps = {
+            'kirok': 'Kirok.png.webp',
+            'mumbai': 'Mumbai.png.webp'
+        };
+
+        let activeMapKey = 'kirok'; 
+
+        const canvas = document.getElementById('paintCanvas'), ctx = canvas.getContext('2d');
+        const board = document.getElementById('mapBoard'), viewport = document.getElementById('viewport'), mapWrapper = document.getElementById('mapWrapper');
+        
+        let shapes = [], redoStack = [], mode = 'move', eraserSubMode = 'full';
+        let isDrawing = false, selectedShape = null, isDragging = false, isResizing = false, isErasing = false;
+        
+        let offsetX = 0, offsetY = 0;
+        let panX = 0, panY = 0, isPanning = false, startPanX = 0, startPanY = 0;
+        
+        let currentEraserRadius = 25; 
+        let currentBrushLineWidth = 4; 
+        let mouseXCurrent = 0, mouseYCurrent = 0, isInteractionActive = false;
+
+        let zoomScale = 1; 
+        let startTouchDistance = 0;
+        let renderPending = false; 
+
+        function toggleDropdown() {
+            const container = document.getElementById('mapDropdown');
+            const list = document.getElementById('customOptions');
+            const isOpen = container.classList.contains('open');
+            
+            if (isOpen) {
+                container.classList.remove('open');
+                list.style.display = 'none';
+            } else {
+                container.classList.add('open');
+                list.style.display = 'block';
+            }
+        }
+
+        function selectMapOption(value, labelText) {
+            activeMapKey = value;
+            document.getElementById('selectedMapLabel').innerText = labelText;
+            
+            const options = document.querySelectorAll('.custom-option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            toggleDropdown();
+            changeMap();
+        }
+
+        window.addEventListener('click', function(e) {
+            const container = document.getElementById('mapDropdown');
+            if (!container.contains(e.target)) {
+                container.classList.remove('open');
+                document.getElementById('customOptions').style.display = 'none';
+            }
+        });
+
+        function requestRender() {
+            if (!renderPending) {
+                renderPending = true;
+                requestAnimationFrame(renderCore);
+            }
+        }
+
+        function setMode(m) {
+            mode = m;
+            document.getElementById('btnMove').classList.toggle('active', m === 'move');
+            document.getElementById('btnZone').classList.toggle('active', m === 'zone');
+            document.getElementById('btnResize').classList.toggle('active', m === 'resize');
+            document.getElementById('btnDraw').classList.toggle('active', m === 'draw');
+            document.getElementById('btnErase').classList.toggle('active', m === 'erase');
+            document.getElementById('btnLock').classList.toggle('active-lock', m === 'lock');
+            
+            document.getElementById('eraserOptions').style.display = (m === 'erase') ? 'block' : 'none';
+            document.getElementById('drawOptions').style.display = (m === 'draw') ? 'block' : 'none';
+            
+            document.body.className = 'mode-' + m;
+            requestRender();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (e.ctrlKey && key === 'z') { e.preventDefault(); undo(); }
+            else if (e.ctrlKey && key === 'y') { e.preventDefault(); redo(); }
+            else if (key === 'm') setMode('move');
+            else if (key === 'z') setMode('zone');
+            else if (key === 'r') setMode('resize');
+            else if (key === 'd') setMode('draw');
+            else if (key === 'e') setMode('erase');
+            else if (key === 'l') setMode('lock');
+        });
+
+        function setEraserMode(type) {
+            eraserSubMode = type;
+            document.getElementById('btnFullErase').classList.toggle('active', type === 'full');
+            document.getElementById('btnPartErase').classList.toggle('active', type === 'part');
+        }
+
+        function updateEraserSize(val) {
+            currentEraserRadius = parseInt(val);
+            document.getElementById('sizeVal').innerText = val + 'px';
+            requestRender(); 
+        }
+
+        function updateBrushSize(val) {
+            currentBrushLineWidth = parseInt(val);
+            document.getElementById('brushSizeVal').innerText = val + 'px';
+        }
+
+        function applyTransformations() { 
+            mapWrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomScale})`; 
+        }
+
+        function getCoordinates(clientX, clientY) {
+            const rect = board.getBoundingClientRect();
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        function renderCore() {
+            renderPending = false;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            shapes.forEach(s => {
+                ctx.beginPath();
+                ctx.strokeStyle = s.color;
+                ctx.lineWidth = s.lineWidth || 4; 
+                ctx.lineJoin = 'round'; 
+                ctx.lineCap = 'round';
+                
+                if (s.locked) ctx.setLineDash([6, 6]);
+                else ctx.setLineDash([]);
+                
+                if(s.type === 'zone') {
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+                    ctx.stroke();
+                } else {
+                    if(s.points.length > 0) {
+                        ctx.moveTo(s.points[0].x, s.points[0].y);
+                        s.points.forEach(p => ctx.lineTo(p.x, p.y));
+                    }
+                    ctx.stroke();
+                }
+            });
+            ctx.setLineDash([]); 
+
+            if (mode === 'erase' && isInteractionActive) {
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(0, 255, 204, 0.7)';
+                ctx.lineWidth = 2;
+                ctx.arc(mouseXCurrent, mouseYCurrent, currentEraserRadius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        function eraseAt(x, y) {
+            let changed = false;
+            const rSq = currentEraserRadius * currentEraserRadius;
+
+            if (eraserSubMode === 'full') {
+                for (let i = shapes.length - 1; i >= 0; i--) {
+                    if (shapes[i].locked) continue; 
+                    if (shapes[i].type === 'zone') {
+                        const dist = Math.sqrt((x - shapes[i].x)**2 + (y - shapes[i].y)**2);
+                        if (Math.abs(dist - shapes[i].r) < currentEraserRadius || dist < currentEraserRadius) {
+                            shapes.splice(i, 1); changed = true;
+                        }
+                    } else if (shapes[i].type === 'draw') {
+                        if (shapes[i].points.some(p => ((x - p.x)**2 + (y - p.y)**2) < rSq)) {
+                            shapes.splice(i, 1); changed = true;
+                        }
+                    }
+                }
+            } 
+            else if (eraserSubMode === 'part') {
+                let nextShapes = [];
+                shapes.forEach(s => {
+                    if (s.locked) { nextShapes.push(s); return; }
+                    
+                    if (s.type === 'draw') {
+                        let currentSegment = [];
+                        s.points.forEach(p => {
+                            const dSq = (x - p.x)**2 + (y - p.y)**2;
+                            if (dSq > rSq) {
+                                currentSegment.push(p);
+                            } else {
+                                if (currentSegment.length > 0) {
+                                    nextShapes.push({ type: 'draw', points: currentSegment, color: s.color, lineWidth: s.lineWidth, locked: false });
+                                    currentSegment = [];
+                                }
+                                changed = true;
+                            }
+                        });
+                        if (currentSegment.length > 0) {
+                            nextShapes.push({ type: 'draw', points: currentSegment, color: s.color, lineWidth: s.lineWidth, locked: false });
+                        }
+                    } else if (s.type === 'zone') {
+                        const dist = Math.sqrt((x - s.x)**2 + (y - s.y)**2);
+                        if (Math.abs(dist - s.r) < currentEraserRadius || dist < currentEraserRadius) changed = true;
+                        else nextShapes.push(s);
+                    }
+                });
+                shapes = nextShapes;
+            }
+            if (changed) requestRender();
+        }
+
+        function handleStart(clientX, clientY, isPinch, touchDist) {
+            isInteractionActive = true;
+            
+            if (mode === 'move' && !isPinch) {
+                isPanning = true;
+                startPanX = clientX - panX;
+                startPanY = clientY - panY;
+                return;
+            }
+
+            if (!isPinch) {
+                const coords = getCoordinates(clientX, clientY);
+                const x = coords.x; const y = coords.y;
+                mouseXCurrent = x; mouseYCurrent = y;
+
+                if (mode === 'erase') {
+                    isErasing = true; 
+                    eraseAt(x, y);
+                } else if (mode === 'lock') {
+                    let targetedZone = [...shapes].reverse().find(s => s.type === 'zone' && Math.sqrt((x-s.x)**2 + (y-s.y)**2) < s.r + 25);
+                    if (targetedZone) targetedZone.locked = !targetedZone.locked;
+                } else if(mode === 'zone') {
+                    selectedShape = [...shapes].reverse().find(s => s.type === 'zone' && !s.locked && Math.sqrt((x-s.x)**2 + (y-s.y)**2) < s.r + 20);
+                    if(selectedShape) { 
+                        isDragging = true; offsetX = x - selectedShape.x; offsetY = y - selectedShape.y; 
+                    } else { 
+                        isDrawing = true; redoStack = []; 
+                        shapes.push({ type:'zone', x, y, r:0, color:document.getElementById('brushColor').value, locked: false }); 
+                    }
+                } else if (mode === 'resize') {
+                    selectedShape = [...shapes].reverse().find(s => s.type === 'zone' && !s.locked && Math.sqrt((x-s.x)**2 + (y-s.y)**2) < s.r + 30);
+                    if(selectedShape) isResizing = true;
+                } else if (mode === 'draw') {
+                    isDrawing = true; redoStack = []; 
+                    shapes.push({ 
+                        type:'draw', 
+                        points:[{x, y}], 
+                        color:document.getElementById('brushColor').value,
+                        lineWidth: currentBrushLineWidth,
+                        locked: false
+                    });
+                }
+                requestRender();
+            } else {
+                startTouchDistance = touchDist;
+            }
+        }
+
+        function handleMove(clientX, clientY, isPinch, touchDist) {
+            if (!isInteractionActive) return;
+
+            if (mode === 'move' && isPanning && !isPinch) {
+                panX = clientX - startPanX;
+                panY = clientY - startPanY;
+                applyTransformations();
+                return;
+            }
+
+            if (!isPinch) {
+                const coords = getCoordinates(clientX, clientY);
+                mouseXCurrent = coords.x; mouseYCurrent = coords.y;
+                
+                if (isErasing && mode === 'erase') {
+                    eraseAt(mouseXCurrent, mouseYCurrent);
+                } else if(isDragging && selectedShape) { 
+                    selectedShape.x = mouseXCurrent - offsetX; selectedShape.y = mouseYCurrent - offsetY; requestRender(); 
+                } else if(isResizing && selectedShape) {
+                    selectedShape.r = Math.sqrt((mouseXCurrent-selectedShape.x)**2 + (mouseYCurrent-selectedShape.y)**2); requestRender();
+                } else if(isDrawing) {
+                    let s = shapes[shapes.length-1];
+                    if(s.type === 'zone') s.r = Math.sqrt((mouseXCurrent-s.x)**2 + (mouseYCurrent-s.y)**2);
+                    else s.points.push({x: mouseXCurrent, y: mouseYCurrent});
+                    requestRender();
+                }
+            } else {
+                zoomScale = Math.min(Math.max((touchDist / startTouchDistance) * zoomScale, 0.4), 5);
+                startTouchDistance = touchDist; 
+                applyTransformations();
+            }
+        }
+
+        function handleEnd() {
+            isDrawing = isDragging = isResizing = isErasing = isPanning = isInteractionActive = false; 
+            requestRender();
+        }
+
+        viewport.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1) {
+                handleStart(e.touches[0].clientX, e.touches[0].clientY, false, 0);
+            } else if (e.touches.length === 2) {
+                const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                handleStart(0, 0, true, dist);
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!isInteractionActive) return;
+            e.preventDefault();
+            if (e.touches.length === 1) {
+                handleMove(e.touches[0].clientX, e.touches[0].clientY, false, 0);
+            } else if (e.touches.length === 2) {
+                const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                handleMove(0, 0, true, dist);
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', handleEnd);
+
+        viewport.addEventListener('mousedown', (e) => { handleStart(e.clientX, e.clientY, false, 0); });
+        window.addEventListener('mousemove', (e) => { handleMove(e.clientX, e.clientY, false, 0); });
+        window.addEventListener('mouseup', handleEnd);
+
+        viewport.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
+            zoomScale = Math.min(Math.max(zoomScale * zoomFactor, 0.4), 5);
+            applyTransformations();
+        }, { passive: false });
+
+        function undo() { if(shapes.length > 0) { redoStack.push(shapes.pop()); requestRender(); } }
+        function redo() { if(redoStack.length > 0) { shapes.push(redoStack.pop()); requestRender(); } }
+        function clearCanvas() { shapes = []; redoStack = []; requestRender(); }
+        
+        function changeMap() { 
+            board.style.backgroundImage = `url('${maps[activeMapKey]}')`; 
+            clearCanvas(); 
+            zoomScale = 1;
+            panX = 0; panY = 0;
+            applyTransformations();
+            setTimeout(() => { resizeCanvas(); }, 150);
+        }
+        
+        function resizeCanvas() { 
+            canvas.width = board.offsetWidth; canvas.height = board.offsetHeight; 
+            requestRender(); 
+        }
+        
+        window.onload = () => { changeMap(); setMode('move'); };
+        window.onresize = () => resizeCanvas();
+    </script>
+</body>
+</html>
